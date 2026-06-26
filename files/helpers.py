@@ -45,50 +45,6 @@ VIDEO_CRFS = {
     "vp9": 32,
 }
 
-# video rates for 25 or 60 fps input, for different codecs, in kbps
-VIDEO_BITRATES = {
-    "h264": {
-        25: {
-            144: 150,
-            240: 300,
-            360: 500,
-            480: 1000,
-            720: 2500,
-            1080: 4500,
-            1440: 9000,
-            2160: 18000,
-        },
-        60: {720: 3500, 1080: 7500, 1440: 18000, 2160: 40000},
-    },
-    "h265": {
-        25: {
-            144: 75,
-            240: 150,
-            360: 275,
-            480: 500,
-            720: 1024,
-            1080: 1800,
-            1440: 4500,
-            2160: 10000,
-        },
-        60: {720: 1800, 1080: 3000, 1440: 8000, 2160: 18000},
-    },
-    "vp9": {
-        25: {
-            144: 75,
-            240: 150,
-            360: 275,
-            480: 500,
-            720: 1024,
-            1080: 1800,
-            1440: 4500,
-            2160: 10000,
-        },
-        60: {720: 1800, 1080: 3000, 1440: 8000, 2160: 18000},
-    },
-}
-
-
 AUDIO_ENCODERS = {"h264": "aac", "h265": "aac", "vp9": "libopus"}
 
 AUDIO_BITRATES = {"h264": 128, "h265": 128, "vp9": 96}
@@ -97,6 +53,22 @@ EXTENSIONS = {"h264": "mp4", "h265": "mp4", "vp9": "webm"}
 
 VIDEO_PROFILES = {"h264": "main", "h265": "main"}
 
+
+# Get the recommended bitrate for a codec+vertical resolution pair
+def get_video_bitrate(codec, lines):
+    match codec:
+        case "h264":
+            return round(0.0115312*(lines**1.8581))
+        case "h264_HFR":
+            return round(0.000658083*(lines**2.15432))
+        case "vp9":
+            return round(0.00217745*(lines**2.17929))
+        case "vp9_HFR":
+            return round(0.000693587*(lines**2.22422))
+        case "h265":
+            return round(0.00217745*(lines**2.17929))
+        case "h265_HFR":
+            return round(0.000693587*(lines**2.22422))
 
 def get_portal_workflow():
     return settings.PORTAL_WORKFLOW
@@ -527,7 +499,7 @@ def get_base_ffmpeg_command(
 
     # avoid very high frame rates
     while target_fps > 60:
-        target_fps = target_fps / 2
+        target_fps = min(target_fps / 2, 60)
 
     if target_fps < 1:
         target_fps = 1
@@ -537,11 +509,11 @@ def get_base_ffmpeg_command(
     if interlaced:
         filters.append("yadif")
 
-    target_width = round(target_height * 16 / 9)
+    # target_width = round(target_height * 8 / 9) * 2
     scale_filter_opts = [
-        f"if(lt(iw\\,ih)\\,{target_height}\\,{target_width})",  # noqa
-        f"if(lt(iw\\,ih)\\,{target_width}\\,{target_height})",  # noqa
-        "force_original_aspect_ratio=decrease",
+        f"if(lt(iw\\,ih)\\,{target_height}\\,-2)",  # noqa
+        f"if(lt(iw\\,ih)\\,-2\\,{target_height})",  # noqa
+        "if(lt(iw\\,ih*16/9)\\,force_original_aspect_ratio=decrease\\,force_original_aspect_ratio=increase)", # If the video is narrower than 16:9, shrink horizontal resolution to fit, maintaining vertical resolution, otherwise, expand horizontal resolution beyond the target, maintaining vertical resolution.
         "force_divisible_by=2",
         "flags=lanczos",
     ]
@@ -602,7 +574,7 @@ def get_base_ffmpeg_command(
             speed = VP9_SPEED
 
     if encoder == "libx264":
-        level = "4.2" if target_height <= 1080 else "5.2"
+        level = "4.2" if target_height <= 1080 else "5.2" #TODO: 4.2 is way too high for virtually all videos less than 720 lines high
 
         x264_params = [
             "keyint=" + str(keyframe_distance * 2),
@@ -714,11 +686,9 @@ def produce_ffmpeg_commands(media_file, media_info, resolution, codec, output_fi
 
     target_fps = Fraction(int(media_info.get("video_frame_rate_n", 30)), int(media_info.get("video_frame_rate_d", 1)))
     if target_fps <= 30:
-        target_rate = VIDEO_BITRATES[codec][25].get(resolution)
+        target_rate = get_video_bitrate(codec, resolution)
     else:
-        target_rate = VIDEO_BITRATES[codec][60].get(resolution)
-    if not target_rate:  # INVESTIGATE MORE!
-        target_rate = VIDEO_BITRATES[codec][25].get(resolution)
+        target_rate = get_video_bitrate(codec+"_HFR", resolution)
     if not target_rate:
         return False
 

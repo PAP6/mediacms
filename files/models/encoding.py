@@ -3,18 +3,27 @@ import tempfile
 
 from django.conf import settings
 from django.core.files import File
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
+from django.utils.translation import gettext_lazy
 
 from .. import helpers
 from .utils import (
     CODECS,
     ENCODE_EXTENSIONS,
-    ENCODE_RESOLUTIONS,
+    #ENCODE_RESOLUTIONS,
     MEDIA_ENCODING_STATUS,
     encoding_media_file_path,
 )
+
+def is_even(value):
+    if value % 2 != 0:
+        raise ValidationError(
+            gettext_lazy('%(value)s is not an even number'),
+            params={'value': value},
+        )
 
 
 class EncodeProfile(models.Model):
@@ -26,7 +35,7 @@ class EncodeProfile(models.Model):
 
     extension = models.CharField(max_length=10, choices=ENCODE_EXTENSIONS)
 
-    resolution = models.IntegerField(choices=ENCODE_RESOLUTIONS, blank=True, null=True)
+    resolution = models.IntegerField(max_length=4, blank=True, null=True, validators=[is_even])
 
     codec = models.CharField(max_length=10, choices=CODECS, blank=True, null=True)
 

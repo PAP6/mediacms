@@ -25,7 +25,7 @@ from ..stop_words import STOP_WORDS
 from .encoding import EncodeProfile, Encoding
 from .subtitle import TranscriptionRequest
 from .utils import (
-    ENCODE_RESOLUTIONS_KEYS,
+    #ENCODE_RESOLUTIONS_KEYS,
     MEDIA_ENCODING_STATUS,
     MEDIA_STATES,
     MEDIA_TYPES_SUPPORTED,
@@ -668,8 +668,8 @@ class Media(models.Model):
 
         if self.media_type not in ["video"]:
             return ret
-        for key in ENCODE_RESOLUTIONS_KEYS:
-            ret[key] = {}
+        #for key in ENCODE_RESOLUTIONS_KEYS:
+        #    ret[key] = {}
 
         # if DO_NOT_TRANSCODE_VIDEO enabled, return original file on a way
         # that video.js can consume. Or also if encoding_status is running, do the

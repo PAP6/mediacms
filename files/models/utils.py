@@ -37,16 +37,16 @@ ENCODE_EXTENSIONS = (
     ("gif", "gif"),
 )
 
-ENCODE_RESOLUTIONS = (
-    (2160, "2160"),
-    (1440, "1440"),
-    (1080, "1080"),
-    (720, "720"),
-    (480, "480"),
-    (360, "360"),
-    (240, "240"),
-    (144, "144"),
-)
+# ENCODE_RESOLUTIONS = (
+#     (2160, "2160"),
+#     (1440, "1440"),
+#     (1080, "1080"),
+#     (720, "720"),
+#     (480, "480"),
+#     (360, "360"),
+#     (240, "240"),
+#     (144, "144"),
+# )
 
 CODECS = (
     ("h265", "h265"),
@@ -55,7 +55,7 @@ CODECS = (
 )
 
 ENCODE_EXTENSIONS_KEYS = [extension for extension, name in ENCODE_EXTENSIONS]
-ENCODE_RESOLUTIONS_KEYS = [resolution for resolution, name in ENCODE_RESOLUTIONS]
+#ENCODE_RESOLUTIONS_KEYS = [resolution for resolution, name in ENCODE_RESOLUTIONS]
 
 
 def generate_uid():

@@ -11,8 +11,8 @@ from .subtitle import Language, Subtitle, TranscriptionRequest  # noqa: F401
 from .utils import CODECS  # noqa: F401
 from .utils import ENCODE_EXTENSIONS  # noqa: F401
 from .utils import ENCODE_EXTENSIONS_KEYS  # noqa: F401
-from .utils import ENCODE_RESOLUTIONS  # noqa: F401
-from .utils import ENCODE_RESOLUTIONS_KEYS  # noqa: F401
+#from .utils import ENCODE_RESOLUTIONS  # noqa: F401
+#from .utils import ENCODE_RESOLUTIONS_KEYS  # noqa: F401
 from .utils import MEDIA_ENCODING_STATUS  # noqa: F401
 from .utils import MEDIA_STATES  # noqa: F401
 from .utils import MEDIA_TYPES_SUPPORTED  # noqa: F401
